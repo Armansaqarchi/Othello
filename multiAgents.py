@@ -280,17 +280,57 @@ def betterEvaluationFunction(currentGameState):
     
     util.raiseNotDefined()
 
-def mobility(self, currentGameState):
+def mobility(self, currentGameState : GameState):
+    min_mobility : int = sys.maxsize
+    max_mobility : int = 1 - sys.maxsize
+    agents : int = currentGameState.getNumAgents()
+    for idx in range(0, agents):
+        value : int = len(currentGameState.getLegalActions(index=idx))
+        if value > max_mobility:
+            max_mobility = value
+            continue
+        elif value < min_mobility:
+            min_mobility = value
+    if max_mobility + min_mobility == 0:
+        return 0
+    
+    return 100 * (max_mobility - min_mobility) / (max_mobility + min_mobility)
+
+
+def parity(self, currentGameState : GameState):
+    min_coins: int = sys.maxsize
+    max_coins : int = 1 - sys.maxsize
+    agents : int = currentGameState.getNumAgents()
+    for idx in range(0, agents):
+        value : int = len(currentGameState.getPieces(index=idx))
+        if value > max_coins:
+            max_coins = value
+            continue
+        elif value < min_coins:
+            min_coins = value
+    return 100 * (max_coins - min_coins) / (max_coins + min_coins)
+    
+
+def stablity(self, currentGameState : GameState):
     ...
 
-def parity(self, currentGameState):
-    ...
-
-def stablity(self, currentGameState):
-    ...
-
-def corners(self, currentGameState):
-    ...
+def corners(self, currentGameState : GameState):
+    min_corner : int = sys.maxsize
+    max_corner : int = 1 - sys.maxsize
+    agents : int = currentGameState.getNumAgents()
+    corners_list = [0] * agents
+    for i in currentGameState.getCorners():
+        if i == -1:
+            continue
+        corners_list[i] += 1
+    for idx in range(0, agents):
+        value = corners_list[idx]    
+        if value > max_corner:
+            max_corner = value
+            continue
+        elif value < min_corner:
+            min_corner = value
+    return 100 * (max_corner - min_corner) / (max_corner + min_corner)
 
 # Abbreviation
 better = betterEvaluationFunction
