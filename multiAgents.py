@@ -3,6 +3,7 @@ import util
 import random
 import sys
 from Game import GameState
+import time
 
 class ReflexAgent(Agent):
     """
@@ -99,14 +100,15 @@ class MinimaxAgent(MultiAgentSearchAgent):
         gameState.getLegalActions(agentIndex) -> list
         self.evaluationFunction(gameState) -> float
         """
+
         agents : int = state.getNumAgents()
         best_action : tuple[int, int]
         best_profit : int = 1 - sys.maxsize
+        depth = self.depth
         for legal_action in state.getLegalActions(index=0):
-            prev_profit = best_profit
-            new_p = self._min_max_policy(index=1, state=state, depth=2)
-            best_profit = max(best_profit, new_p)
-            if best_profit > prev_profit:
+            new_p = self._min_max_policy(index=1, state=state, depth=depth-1)
+            if new_p > best_profit:
+                best_profit = new_p
                 best_action = legal_action
         return best_action
 
@@ -115,7 +117,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         if state.isGameFinished():
             return state.getScore(index = index)
         elif (depth == 0):
-            return scoreEvaluationFunction(state)
+            return self.evaluationFunction(state)
         profit : int
         if index == 0:
             func = max
@@ -127,7 +129,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             next_state = state.generateSuccessor(index, action=legal_action)
             agents = state.getNumAgents()
             choice = self._min_max_policy((index+1)%(agents), next_state, depth-1)
-            prev_profit : int = profit
+
             profit = func(profit, choice)
         return profit
 
@@ -139,7 +141,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def getAction(self, state : GameState):
+    def getAction(self, state):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
 
@@ -151,14 +153,14 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         b : int = sys.maxsize
 
         for action in state.getLegalActions(index=0):
-            next_state : GameState = state.generateSuccessor(agentIndex=0, action=action)
+            next_state = state.generateSuccessor(agentIndex=0, action=action)
             new_score = self._alpha_beta_policy(next_state, 1, a, b, 4)
             if new_score > best_score:
                 best_score = new_score
                 best_action = action
         return best_action
     
-    def _alpha_beta_policy(self, state : GameState, index : int, a : int, b : int, depth : int) -> int:
+    def _alpha_beta_policy(self, state, index : int, a : int, b : int, depth : int) -> int:
         """
         returns the best option for the current state depending on its type
         but most of the time, the exact value is not returned due to pruning
@@ -168,7 +170,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         if state.isGameFinished():
             return state.getScore(index = 0)
         elif depth == 0:
-            return scoreEvaluationFunction(state)
+            return self.evaluationFunction(state)
         if index == 0:
             v : int = 1 - sys.maxsize
         else:
@@ -189,6 +191,85 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                     return v
                 b = min(b, v)
         return v
+    
+    # class TestAlphaBeta:
+    #     GRAPH = {
+    #         "A1" : ["B1", "B2"],
+    #         "B1" : ["C1", "C2"],
+    #         "B2" : ["C3", "C4"],
+    #         "C1" : ["D1", "D2"],
+    #         "C2" : ["D3", "D4"],
+    #         "C3" : ["D5", "D6"],
+    #         "C4" : ["D7", "D8"],
+    #         "D1" : ["A", "B"],
+    #         "D2" : ["C", "D"],
+    #         "D3" : ["E", "F"],
+    #         "D4" : ["G", "H"],
+    #         "D5" : ["I", "J"],
+    #         "D6" : ["K", "L"],
+    #         "D7" : ["M", "N"],
+    #         "D8" : ["O", "P"],
+    #     }
+    #     TERMINAL_VALUES = {
+    #         "A" : 6,
+    #         "B" : 8,
+    #         "C" : 10,
+    #         "D" : 11,
+    #         "E" : 13,
+    #         "F" : 3,
+    #         "G" : 5,
+    #         "H" : 9,
+    #         "I" : 4,
+    #         "J" : 7,
+    #         "K" : 1,
+    #         "L" : 0,
+    #         "M" : 12,
+    #         "N" : 15,
+    #         "O" : 2,
+    #         "P" : 14
+    #     }
+
+    #     def __init__(self, name, a, b, isTerminal, score) -> None:
+    #         self.name = name
+    #         self.isTerminal = isTerminal
+    #         self.a = a
+    #         self.b = b
+    #         if isTerminal:
+    #             self.score = score
+
+    #     def getLegalActions(self):
+    #         return self.GRAPH[self.name]
+
+    #     def getScore(self):
+    #         if self.isTerminal:
+    #             raise Exception("not a terminal state to perform score")
+    #         return self.score
+
+    #     def isGameFinished(self):
+    #         return self.isTerminal
+        
+    #     def generateSuccessor(self, action : int):
+    #         state = AlphaBetaAgent.TestAlphaBeta(
+    #             a = self.a,
+    #             b = self.b,
+    #             isTerminal= False,
+    #             score=False,
+    #             name= self.GRAPH[self.name][action],
+    #         )
+    #         if self.name[0] == "D":
+    #             state.nextTerminal = True
+    #             state.score = self.TERMINAL_VALUES[state.name]
+
+    # def test_alpha_beta(self):
+    #     state = AlphaBetaAgent.TestAlphaBeta(
+    #         name = "A1",
+    #         a = 1 - sys.maxsize,
+    #         b = sys.maxsize,
+    #         isTerminal=False,
+    #         score=None
+    #     )
+    #     self.getAction(state=state)
+        
         
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
@@ -262,7 +343,7 @@ def betterEvaluationFunction(currentGameState):
     Here are also some functions you will need to use:
     
     gameState.getPieces(index) -> list
-    gameState.getCorners() -> 4-tuple
+    gameState.getcorns() -> 4-tuple
     gameState.getScore() -> list
     gameState.getScore(index) -> int
 
@@ -270,67 +351,82 @@ def betterEvaluationFunction(currentGameState):
     
     "*** YOUR CODE HERE ***"
 
-    # parity
+    par = parity(currentGameState=currentGameState)
 
-    # corners
+    corns = corners(currentGameState=currentGameState)
 
-    # mobility
+    mob = mobility(currentGameState=currentGameState)
 
-    # stability
+    stab = stablity(currentGameState=currentGameState)
+
+
+    return 1 * corns + 10 * stab + 1 * mob + 1 * par
     
-    util.raiseNotDefined()
 
-def mobility(self, currentGameState : GameState):
-    min_mobility : int = sys.maxsize
-    max_mobility : int = 1 - sys.maxsize
-    agents : int = currentGameState.getNumAgents()
-    for idx in range(0, agents):
-        value : int = len(currentGameState.getLegalActions(index=idx))
-        if value > max_mobility:
-            max_mobility = value
-            continue
-        elif value < min_mobility:
-            min_mobility = value
-    if max_mobility + min_mobility == 0:
+def mobility(currentGameState : GameState):
+    max_player_mobility = len(currentGameState.getLegalActions(index=0))
+    min_player_mobility = 0
+    agents = currentGameState.getNumAgents()
+    for i in range(1, agents):
+        min_player_mobility += len(currentGameState.getLegalActions(index=i))
+    if min_player_mobility + max_player_mobility == 0:
         return 0
     
-    return 100 * (max_mobility - min_mobility) / (max_mobility + min_mobility)
+    return (max_player_mobility - min_player_mobility) / (max_player_mobility + min_player_mobility)
+
+def parity(currentGameState : GameState):
+    players_coins = [0, 0]
+    players_coins[0] = len(currentGameState.getPieces(index = 0))
+    agents = currentGameState.getNumAgents()
+    for i in range(1, agents):
+        players_coins[1] += len(currentGameState.getPieces(index=i))
+    if players_coins[1] + players_coins[0] == 0:
+        return 0
+    return (players_coins[0] - players_coins[1]) / (players_coins[0] + players_coins[1])
 
 
-def parity(self, currentGameState : GameState):
-    min_coins: int = sys.maxsize
-    max_coins : int = 1 - sys.maxsize
-    agents : int = currentGameState.getNumAgents()
-    for idx in range(0, agents):
-        value : int = len(currentGameState.getPieces(index=idx))
-        if value > max_coins:
-            max_coins = value
-            continue
-        elif value < min_coins:
-            min_coins = value
-    return 100 * (max_coins - min_coins) / (max_coins + min_coins)
+def stablity(currentGameState : GameState):
+    players_stablity = [0, 0]
+    static_weights = [
+        [4,  -3,  2,  2,  2,  2, -3,  4],
+        [-3, -4, -1, -1, -1, -1, -4, -3],
+        [2,  -1,  1,  0,  0,  1, -1,  2],
+        [2,  -1,  0,  1,  1,  0, -1,  2],
+        [2,  -1,  0,  1,  1,  0, -1,  2],
+        [2,  -1,  1,  0,  0,  1, -1,  2],
+        [-3, -4, -1, -1, -1, -1, -4, -3],
+        [4,  -3,  2,  2,  2,  2, -3,  4],
+    ]
+
+    for i in range (8):
+        for j in range(8):
+            index = currentGameState.data.board[i][j]
+            if index == -1:
+                continue
+            if index == 0:
+                players_stablity[0] += static_weights[i][j]
+            else:
+                players_stablity[1] += static_weights[i][j]
+
+    if players_stablity[0] + players_stablity[1] == 0:
+        return 0
     
+    return 100 * (players_stablity[0] - players_stablity[1])/ (players_stablity[0] + players_stablity[1])
 
-def stablity(self, currentGameState : GameState):
-    ...
-
-def corners(self, currentGameState : GameState):
-    min_corner : int = sys.maxsize
-    max_corner : int = 1 - sys.maxsize
-    agents : int = currentGameState.getNumAgents()
-    corners_list = [0] * agents
+def corners(currentGameState : GameState):
+    corners = [0, 0]
     for i in currentGameState.getCorners():
         if i == -1:
             continue
-        corners_list[i] += 1
-    for idx in range(0, agents):
-        value = corners_list[idx]    
-        if value > max_corner:
-            max_corner = value
-            continue
-        elif value < min_corner:
-            min_corner = value
-    return 100 * (max_corner - min_corner) / (max_corner + min_corner)
+        if i == 0:
+            corners[0] += 1
+        else:
+            corners[1] += 1
+
+    if corners[0] + corners[1] == 0:
+        return 0
+    
+    return 100 * (corners[0] - corners[1]) / (corners[0] + corners[1])
 
 # Abbreviation
 better = betterEvaluationFunction
